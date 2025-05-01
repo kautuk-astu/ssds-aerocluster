@@ -1,0 +1,28 @@
+<%
+# Input parameters
+drone_namespace  = @settings["drone_namespace"]
+udp_port  = @settings["udp_port"]
+%>
+
+name: <%= drone_namespace %>
+attach: false
+root: ./
+startup_window: platform
+windows:
+  - platform:
+      layout: tiled
+      panes:
+        - MicroXRCEAgent udp4 -p <%= udp_port %>
+        - ros2 launch as2_platform_pixhawk pixhawk_launch.py namespace:=<%= drone_namespace %> platform_config_file:=config/config.yaml
+
+  - basics_robotics_functions:
+      layout:
+      panes:
+        - ros2 launch as2_state_estimator state_estimator_launch.py namespace:=<%= drone_namespace %> config_file:=config/config.yaml
+        - ros2 launch as2_motion_controller controller_launch.py namespace:=<%= drone_namespace %> config_file:=config/config.yaml plugin_name:=pid_speed_controller plugin_config_file:=config/pid_speed_controller.yaml
+
+  - behaviors:
+      layout:
+      panes:
+        - ros2 launch as2_behaviors_motion motion_behaviors_launch.py namespace:=<%= drone_namespace %> config_file:=config/config.yaml
+        - ros2 launch as2_behaviors_trajectory_generation generate_polynomial_trajectory_behavior_launch.py namespace:=<%= drone_namespace %> config_file:=config/config.yaml
